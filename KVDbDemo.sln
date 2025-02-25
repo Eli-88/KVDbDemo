@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KVDbDemo", "KVDbDemo\KVDbDemo.csproj", "{A57D68FD-6D57-4DFA-8684-07182681A45C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestKVDbDemo", "TestKVDbDemo\TestKVDbDemo.csproj", "{B8A09CBB-B639-4E43-BF83-C11256EAA48A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A57D68FD-6D57-4DFA-8684-07182681A45C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A57D68FD-6D57-4DFA-8684-07182681A45C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A57D68FD-6D57-4DFA-8684-07182681A45C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A57D68FD-6D57-4DFA-8684-07182681A45C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8A09CBB-B639-4E43-BF83-C11256EAA48A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8A09CBB-B639-4E43-BF83-C11256EAA48A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8A09CBB-B639-4E43-BF83-C11256EAA48A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8A09CBB-B639-4E43-BF83-C11256EAA48A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

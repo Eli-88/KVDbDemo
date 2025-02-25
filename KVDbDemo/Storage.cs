@@ -105,9 +105,8 @@ public unsafe class Storage
         
         for(int i = 0; i < MAX_LEVEL; i++) { prevNodeIndexes[i] = INVALID_INDEX; }
 
-        bool hasLevel = true;
-        bool validNode = true;
-        while (validNode && hasLevel)
+        bool levelRemaining = true;
+        while (levelRemaining)
         {
             Node* next = IndexToNode(curr->NextIndex[level]);
             prevNodeIndexes[level] = NodeToIndex(curr);
@@ -122,9 +121,8 @@ public unsafe class Storage
                 else if (next->Key > key) { --level; }
                 else                      { curr = next; }
             }
-
-            validNode = (curr != null);
-            hasLevel = (level >= 0);
+            
+            levelRemaining = (level >= 0);
         }
         
         return found;

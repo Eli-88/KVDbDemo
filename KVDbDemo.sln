@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KVDbDemo", "KVDbDemo\KVDbDemo.csproj", "{A57D68FD-6D57-4DFA-8684-07182681A45C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KVDbDemo", "src\KVDbDemo\KVDbDemo.csproj", "{A57D68FD-6D57-4DFA-8684-07182681A45C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestKVDbDemo", "TestKVDbDemo\TestKVDbDemo.csproj", "{B8A09CBB-B639-4E43-BF83-C11256EAA48A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestKVDbDemo", "src\TestKVDbDemo\TestKVDbDemo.csproj", "{B8A09CBB-B639-4E43-BF83-C11256EAA48A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,130 +1,99 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Concurrent;
 
 namespace KVDbDemo;
 
 internal static class Program
 {
-    private class Db
+    private static void RequestProcessingTask(
+        Storage storage, 
+        ConcurrentQueue<HttpListenerContext> pending)
     {
-        public Db()
+        while (true)
         {
-            _storage = new Storage(1 << 20);
-            _lock = new ReaderWriterLockSlim();
-        }
-
-        public void Insert(int key, int value)
-        {
-            _lock.EnterWriteLock();
-            _storage.Insert(key, value);
-            _lock.ExitWriteLock();
-        }
-
-        public void Remove(int key)
-        {
-            _lock.EnterWriteLock();
-            _storage.Remove(key);
-            _lock.ExitWriteLock();
-        }
-
-        public (int, bool) Get(int key)
-        {
-            _lock.EnterReadLock();
-            
-            int value;
-            bool success;
-            (value, success) = _storage.Retrieve(key);
-            
-            _lock.ExitReadLock();
-            
-            return (value, success);
-        }
-
-        private Storage _storage;
-        private ReaderWriterLockSlim _lock;
-    }
-    
-    private static async Task HandleRequest(
-        Db db,
-        HttpListenerContext httpContext)
-    {
-        HttpListenerResponse response = httpContext.Response;
-        HttpListenerRequest request = httpContext.Request;
-
-        if (request.HasEntityBody)
-        {
-            string responseString;
-            using (StreamReader reader = new StreamReader(request.InputStream, request.ContentEncoding))
+            if (pending.TryDequeue(out var httpContext))
             {
-                string body = await reader.ReadToEndAsync();
+                HttpListenerResponse response = httpContext.Response;
+                HttpListenerRequest request = httpContext.Request;
 
-                try
+                if (request.HasEntityBody)
                 {
-                    switch (request.Url?.AbsolutePath.ToLower() ?? "invalid_path")
+                    string responseString;
+                    using (StreamReader reader = new StreamReader(request.InputStream, request.ContentEncoding))
                     {
-                        case "/add":
+                        string body = reader.ReadToEnd();
+
+                        try
                         {
-                            AddMsg msg = JsonSerializer.Deserialize<AddMsg>(body);
-                            db.Insert(msg.Key, msg.Value);
-                            responseString = "success";
-                            response.StatusCode = 200;
-                            break;
+                            switch (request.Url?.AbsolutePath.ToLower() ?? "invalid_path")
+                            {
+                                case "/add":
+                                {
+                                    AddMsg msg = JsonSerializer.Deserialize<AddMsg>(body);
+                                    storage.Insert(msg.Key, msg.Value);
+                                    responseString = "success";
+                                    response.StatusCode = 200;
+                                    break;
+                                }
+                                case "/remove":
+                                {
+                                    RemoveMsg msg = JsonSerializer.Deserialize<RemoveMsg>(body);
+                                    storage.Remove(msg.Key);
+                                    responseString = "success";
+                                    response.StatusCode = 200;
+                                    break;
+                                }
+                                case "/get":
+                                {
+                                    GetMsg msg = JsonSerializer.Deserialize<GetMsg>(body);
+                                    (int value, bool success) = storage.Retrieve(msg.Key);
+                                    responseString = success ? $"{value}" : "key not found";
+                                    response.StatusCode = 200;
+                                    break;
+                                }
+                                default:
+                                {
+                                    responseString = "404 Not Found";
+                                    response.StatusCode = 404;
+                                    break;
+                                }
+                            }
                         }
-                        case "/remove":
+                        catch (Exception e)
                         {
-                            RemoveMsg msg = JsonSerializer.Deserialize<RemoveMsg>(body);
-                            db.Remove(msg.Key);
-                            responseString = "success";
-                            response.StatusCode = 200;
-                            break;
-                        }
-                        case "/get":
-                        {
-                            GetMsg msg = JsonSerializer.Deserialize<GetMsg>(body);
-                            (int value, bool success) = db.Get(msg.Key);
-                            responseString = success ? $"{value}" : "key not found";
-                            response.StatusCode = 200;
-                            break;
-                        }
-                        default:
-                        {
-                            responseString = "404 Not Found";
-                            response.StatusCode = 404;
-                            break;
+                            responseString = "400 Bad Request";
+                            response.StatusCode = 400;
                         }
                     }
+                    
+                    byte[] responseBytes = Encoding.UTF8.GetBytes(responseString);
+                    response.ContentLength64 = responseBytes.Length;
+                    
+                    response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
                 }
-                catch (Exception e)
-                {
-                    responseString = "400 Bad Request";
-                    response.StatusCode = 400;
-                }
-            }
-            
-            byte[] responseBytes = Encoding.UTF8.GetBytes(responseString);
-            response.ContentLength64 = responseBytes.Length;
-            
-            await response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
-        }
 
-        response.OutputStream.Close();
+                response.OutputStream.Close();
+            }
+        }
     }
     
     
-    public static async Task Main()
+    public static void Main()
     {
-        Db db = new Db();
+        ConcurrentQueue<HttpListenerContext> pending = new ConcurrentQueue<HttpListenerContext>();
+        Storage storage = new Storage(1 << 20);
         
         HttpListener listener = new HttpListener();
         listener.Prefixes.Add("http://localhost:8080/");
         listener.Start();
-        
-        bool running = true;
-        while (running)
+
+        new Thread(_ => { RequestProcessingTask(storage, pending); }).Start();
+        while (true)
         {
-            HttpListenerContext httpContext = await listener.GetContextAsync();
-            await Task.Run(() => HandleRequest(db, httpContext));
+            HttpListenerContext httpContext = listener.GetContext();
+            pending.Enqueue(httpContext);
         }
     }
 }

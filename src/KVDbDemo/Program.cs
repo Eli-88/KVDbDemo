@@ -7,9 +7,9 @@ namespace KVDbDemo;
 
 internal static class Program
 {
-    private static void RequestProcessingTask(
-        Storage storage, 
-        ConcurrentQueue<HttpListenerContext> pending)
+    private static void RequestProcessingTask<T>(
+        T storage, 
+        ConcurrentQueue<HttpListenerContext> pending) where T : IStorage
     {
         while (true)
         {
@@ -83,13 +83,13 @@ internal static class Program
     public static void Main()
     {
         ConcurrentQueue<HttpListenerContext> pending = new ConcurrentQueue<HttpListenerContext>();
-        Storage storage = new Storage(1 << 20);
+        SkipListStorage skipListStorage = new SkipListStorage(1 << 20);
         
         HttpListener listener = new HttpListener();
         listener.Prefixes.Add("http://localhost:8080/");
         listener.Start();
 
-        new Thread(_ => { RequestProcessingTask(storage, pending); }).Start();
+        new Thread(_ => { RequestProcessingTask(skipListStorage, pending); }).Start();
         while (true)
         {
             HttpListenerContext httpContext = listener.GetContext();

@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace KVDbDemo;
 
-public unsafe class Storage
+public unsafe class SkipListStorage : IStorage
 {
     private const int MAX_LEVEL = 8;
     private const int INVALID_INDEX = -1;
@@ -16,7 +16,7 @@ public unsafe class Storage
         public fixed int NextIndex[MAX_LEVEL];
     }
 
-    public Storage(int capacity)
+    public SkipListStorage(int capacity)
     {
         _capacity = capacity + 1;
         IntPtr allocated = OS.Mmap(

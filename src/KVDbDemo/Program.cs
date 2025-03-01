@@ -13,69 +13,68 @@ internal static class Program
     {
         while (true)
         {
-            if (pending.TryDequeue(out var httpContext))
+            if (!pending.TryDequeue(out var httpContext)) continue;
+            
+            HttpListenerResponse response = httpContext.Response;
+            HttpListenerRequest request = httpContext.Request;
+
+            if (request.HasEntityBody)
             {
-                HttpListenerResponse response = httpContext.Response;
-                HttpListenerRequest request = httpContext.Request;
-
-                if (request.HasEntityBody)
+                string responseString;
+                using (StreamReader reader = new StreamReader(request.InputStream, request.ContentEncoding))
                 {
-                    string responseString;
-                    using (StreamReader reader = new StreamReader(request.InputStream, request.ContentEncoding))
-                    {
-                        string body = reader.ReadToEnd();
+                    string body = reader.ReadToEnd();
 
-                        try
+                    try
+                    {
+                        switch (request.Url?.AbsolutePath.ToLower() ?? "invalid_path")
                         {
-                            switch (request.Url?.AbsolutePath.ToLower() ?? "invalid_path")
+                            case "/add":
                             {
-                                case "/add":
-                                {
-                                    AddMsg msg = JsonSerializer.Deserialize<AddMsg>(body);
-                                    storage.Insert(msg.Key, msg.Value);
-                                    responseString = "success";
-                                    response.StatusCode = 200;
-                                    break;
-                                }
-                                case "/remove":
-                                {
-                                    RemoveMsg msg = JsonSerializer.Deserialize<RemoveMsg>(body);
-                                    storage.Remove(msg.Key);
-                                    responseString = "success";
-                                    response.StatusCode = 200;
-                                    break;
-                                }
-                                case "/get":
-                                {
-                                    GetMsg msg = JsonSerializer.Deserialize<GetMsg>(body);
-                                    (int value, bool success) = storage.Retrieve(msg.Key);
-                                    responseString = success ? $"{value}" : "key not found";
-                                    response.StatusCode = 200;
-                                    break;
-                                }
-                                default:
-                                {
-                                    responseString = "404 Not Found";
-                                    response.StatusCode = 404;
-                                    break;
-                                }
+                                AddMsg msg = JsonSerializer.Deserialize<AddMsg>(body);
+                                storage.Insert(msg.Key, msg.Value);
+                                responseString = "success";
+                                response.StatusCode = 200;
+                                break;
+                            }
+                            case "/remove":
+                            {
+                                RemoveMsg msg = JsonSerializer.Deserialize<RemoveMsg>(body);
+                                storage.Remove(msg.Key);
+                                responseString = "success";
+                                response.StatusCode = 200;
+                                break;
+                            }
+                            case "/get":
+                            {
+                                GetMsg msg = JsonSerializer.Deserialize<GetMsg>(body);
+                                (int value, bool success) = storage.Retrieve(msg.Key);
+                                responseString = success ? $"{value}" : "key not found";
+                                response.StatusCode = 200;
+                                break;
+                            }
+                            default:
+                            {
+                                responseString = "404 Not Found";
+                                response.StatusCode = 404;
+                                break;
                             }
                         }
-                        catch (Exception e)
-                        {
-                            responseString = "400 Bad Request";
-                            response.StatusCode = 400;
-                        }
                     }
-                    
-                    byte[] responseBytes = Encoding.UTF8.GetBytes(responseString);
-                    response.ContentLength64 = responseBytes.Length;
-                    
-                    response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
+                    catch (Exception e)
+                    {
+                        responseString = "400 Bad Request";
+                        response.StatusCode = 400;
+                    }
                 }
-
-                response.OutputStream.Close();
+                    
+                byte[] responseBytes = Encoding.UTF8.GetBytes(responseString);
+                response.ContentLength64 = responseBytes.Length;
+                    
+                response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
             }
+
+            response.OutputStream.Close();
         }
     }
     

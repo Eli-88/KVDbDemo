@@ -7,7 +7,7 @@ public unsafe class SkipListStorage : IStorage, IDisposable
     private const int MAX_LEVEL = 8;
     private const int INVALID_INDEX = -1;
     
-    struct Node
+    private struct Node
     {
         public bool Used;
         public byte Height;
@@ -95,6 +95,10 @@ public unsafe class SkipListStorage : IStorage, IDisposable
         Free(node);
     }
     
+    public void Dispose() => OS.Munmap((IntPtr)_allocated, (ulong)(_capacity * sizeof(Node)));
+
+
+    #region Helper Function
     
     private Node* FindNode(int key, Span<int> prevNodeIndexes)
     {
@@ -127,11 +131,6 @@ public unsafe class SkipListStorage : IStorage, IDisposable
         
         return found;
     }
-
-    public void Dispose() => OS.Munmap((IntPtr)_allocated, (ulong)(_capacity * sizeof(Node)));
-
-
-    #region Helper Function
 
     private Node* Allocate(int key, int value)
     {

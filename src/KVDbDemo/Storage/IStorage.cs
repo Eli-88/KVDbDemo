@@ -1,4 +1,4 @@
-namespace KVDbDemo;
+namespace KVDbDemo.Storage;
 
 public interface IStorage
 {

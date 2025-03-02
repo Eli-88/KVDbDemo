@@ -1,13 +1,13 @@
-﻿using KVDbDemo;
+using KVDbDemo;
 using KVDbDemo.Storage;
 
 namespace TestKVDbDemo;
 
 [TestClass]
-public sealed class TestSkipListStorage: TestBaseStorage
+public sealed class TestArrayStorage: TestBaseStorage
 {
     protected override IStorage CreateStorage(int capacity)
     {
-        return new SkipListStorage(capacity);
+        return new ArrayStorage(capacity);
     }
 }

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace KVDbDemo;
+namespace KVDbDemo.Storage;
 
 public unsafe class SkipListStorage : IStorage, IDisposable
 {

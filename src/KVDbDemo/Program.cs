@@ -83,7 +83,7 @@ internal static class Program
     public static void Main()
     {
         ConcurrentQueue<HttpListenerContext> pending = new ConcurrentQueue<HttpListenerContext>();
-        using SkipListStorage skipListStorage = new SkipListStorage(1 << 20);
+        using var skipListStorage = new SkipListStorage(1 << 20);
         
         HttpListener listener = new HttpListener();
         listener.Prefixes.Add("http://localhost:8080/");

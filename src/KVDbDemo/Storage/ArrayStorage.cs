@@ -39,51 +39,48 @@ public unsafe class ArrayStorage: IStorage, IDisposable
 
     public void Insert(int key, int value)
     {
-        bool found = false;
-        for (int i = 0; i < _count; i++)
+        Node* node = FindNode(key);
+        if (node != null)
         {
-            if (_allocated[i].Key == key)
-            {
-                _allocated[i].Value = value;
-                found = true;
-                break;
-            }
+            node->Value = value;
+            return;
         }
-
         
         bool exceededCapacity = _count + 1 > _capacity;
-        if (!found && exceededCapacity)
+        if (exceededCapacity)
         {
             throw new OutOfMemoryException();
         }
-
-        if (!found)
-        {
-            _allocated[_count++] = new Node { Key = key, Value = value };
-        }
+        _allocated[_count++] = new Node { Key = key, Value = value };
     }
 
     public void Remove(int key)
     {
-        int idx = -1;
-        for (int i = 0; i < _count; i++)
-        {
-            if (_allocated[i].Key == key)
-            {
-                idx = i;
-            }
-        }
+        Node* node = FindNode(key);
+        if(node == null) return;
 
-        if (idx != -1)
-        {
-            _allocated[idx] = _allocated[_count - 1];
-            --_count;
-        }
+        int offset = (int)(node - _count);
+        
+        _allocated[offset] = _allocated[_count - 1];
+        --_count;
     }
     
     public void Dispose()
     {
         OS.Munmap((IntPtr)_allocated, (ulong)_capacity);
+    }
+
+    private Node* FindNode(int key)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            if (_allocated[i].Key == key)
+            {
+                return &(_allocated[i]);
+            }
+        }
+
+        return null;
     }
 
     private int _count;

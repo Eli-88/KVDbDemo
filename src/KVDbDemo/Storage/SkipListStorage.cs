@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace KVDbDemo.Storage;
 
-public unsafe class SkipListStorage : IStorage, IDisposable
+public unsafe class SkipListStorage : IStorage
 {
     private const int MAX_LEVEL = 8;
     private const int INVALID_INDEX = -1;

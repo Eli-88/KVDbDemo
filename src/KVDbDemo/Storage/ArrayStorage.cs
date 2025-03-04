@@ -1,6 +1,6 @@
 namespace KVDbDemo.Storage;
 
-public unsafe class ArrayStorage: IStorage, IDisposable
+public unsafe class ArrayStorage: IStorage
 {
     private struct Node
     {

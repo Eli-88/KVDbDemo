@@ -10,7 +10,7 @@ public abstract class TestBaseStorage
     [TestMethod]
     public void TestExceedCapacity()
     {
-        IStorage storage = CreateStorage(10);
+        using IStorage storage = CreateStorage(10);
         for(int i = 0; i < 10; ++i) {storage.Insert(i, i);}
         Assert.ThrowsException<OutOfMemoryException>(() => storage.Insert(100, 100));
     }
@@ -20,7 +20,7 @@ public abstract class TestBaseStorage
     {
         try
         {
-            IStorage storage = CreateStorage(10);
+            using IStorage storage = CreateStorage(10);
             for(int i = 0; i < 10; ++i) {storage.Insert(i, i);}
         }
         catch (Exception e)
@@ -34,7 +34,7 @@ public abstract class TestBaseStorage
     {
         try
         {
-            IStorage storage = CreateStorage(10);
+            using IStorage storage = CreateStorage(10);
             for(int i = 0; i < 10; ++i) {storage.Insert(i, i);}
             storage.Remove(0);
             storage.Insert(0, 1000);
@@ -48,7 +48,7 @@ public abstract class TestBaseStorage
     [TestMethod]
     public void TestInsertAndRetrieve()
     {
-        IStorage storage = CreateStorage(10);
+        using IStorage storage = CreateStorage(10);
         for(int i = 0; i < 10; ++i) {storage.Insert(i, i);}
 
         for (int i = 0; i < 10; ++i)
@@ -62,7 +62,7 @@ public abstract class TestBaseStorage
     [TestMethod]
     public void TestRetrieveEmpty()
     {
-        IStorage storage = CreateStorage(10);
+        using IStorage storage = CreateStorage(10);
         (_, bool success) = storage.Retrieve(0);
         Assert.IsFalse(success);
     }
@@ -70,7 +70,7 @@ public abstract class TestBaseStorage
     [TestMethod]
     public void TestInsertDuplicateKey()
     {
-        IStorage storage = CreateStorage(10);
+        using IStorage storage = CreateStorage(10);
         for(int i = 0; i < 10; ++i) {storage.Insert(i, i);}
         for(int i = 0; i < 10; ++i) {storage.Insert(i, i + 100);}
 
@@ -87,7 +87,7 @@ public abstract class TestBaseStorage
     {
         try
         {
-            IStorage storage = CreateStorage(10);
+            using IStorage storage = CreateStorage(10);
             storage.Remove(0);
         }
         catch (Exception e)

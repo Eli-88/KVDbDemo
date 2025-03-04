@@ -1,6 +1,6 @@
 namespace KVDbDemo.Storage;
 
-public interface IStorage
+public interface IStorage: IDisposable
 {
     unsafe (int Value, bool Success) Retrieve(int key);
     unsafe void Insert(int key, int value);

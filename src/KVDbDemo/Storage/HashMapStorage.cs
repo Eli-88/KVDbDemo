@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace KVDbDemo.Storage;
 
-public unsafe class HashMapStorage : IStorage
+public class HashMapStorage : IStorage
 {
     private struct Node
     {
@@ -15,15 +15,8 @@ public unsafe class HashMapStorage : IStorage
     {
         _maxCount = capacity;
         _capacity = PowerOfTwo(capacity);
-        var buffer = OS.Mmap(IntPtr.Zero,
-            (ulong)_capacity,
-            OS.PROT_READ | OS.PROT_WRITE,
-            OS.MAP_ANONYMOUS | OS.MAP_PRIVATE,
-            -1,
-            0);
-        
-        if(buffer == OS.MAP_FAIL) {throw new OutOfMemoryException();}
-        _allocated = (Node*)buffer;
+
+        _allocated = new Node[_capacity];
         _count = 0;
 
         for (int i = 0; i < _capacity; i++)
@@ -34,7 +27,6 @@ public unsafe class HashMapStorage : IStorage
 
     public void Dispose()
     {
-        OS.Munmap((IntPtr)_allocated, (ulong)_capacity);
     }
 
     public (int Value, bool Success) Retrieve(int key)
@@ -53,27 +45,28 @@ public unsafe class HashMapStorage : IStorage
     {
         
         int hash = Hash(key);
-        Node* node = null;
+        int idx = -1;
         for (int i = 0; i < _capacity; i++)
         {
             if (_allocated[i].Key == key || _allocated[i].Used == false)
             {
-                node = &_allocated[i];
+                idx = i;
                 break;
             }
             hash = (hash + 1) % _capacity;
         }
         
-        Debug.Assert(node != null);
-
-        if (node->Used == false)
+        Debug.Assert(idx != -1);
+        ref Node node = ref _allocated[idx];
+        
+        if (node.Used == false)
         {
             if (_count == _maxCount) { throw new OutOfMemoryException(); }
             _count++;
         }
-        node->Used = true;
-        node->Key = key;
-        node->Value = value;
+        node.Used = true;
+        node.Key = key;
+        node.Value = value;
     }
 
     public void Remove(int key)
@@ -105,5 +98,5 @@ public unsafe class HashMapStorage : IStorage
     private int _count;
     private int _maxCount;
     private int _capacity;
-    private Node* _allocated;
+    private Node[] _allocated;
 }

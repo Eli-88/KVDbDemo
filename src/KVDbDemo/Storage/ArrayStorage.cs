@@ -1,6 +1,6 @@
 namespace KVDbDemo.Storage;
 
-public unsafe class ArrayStorage: IStorage
+public class ArrayStorage: IStorage
 {
     private struct Node
     {
@@ -10,16 +10,7 @@ public unsafe class ArrayStorage: IStorage
 
     public ArrayStorage(int capacity)
     {
-        IntPtr allocated = OS.Mmap(
-            IntPtr.Zero,
-            (ulong)(capacity * sizeof(Node)),
-            OS.PROT_READ | OS.PROT_WRITE,
-            OS.MAP_PRIVATE | OS.MAP_ANONYMOUS,
-            -1,
-            0);
-
-        if (allocated == OS.MAP_FAIL) throw new OutOfMemoryException();
-        _allocated = (Node*)allocated;
+        _allocated = new Node[capacity];
         _capacity = capacity;
         _count = 0;
     }
@@ -39,10 +30,10 @@ public unsafe class ArrayStorage: IStorage
 
     public void Insert(int key, int value)
     {
-        Node* node = FindNode(key);
-        if (node != null)
+        int idx = FindNode(key);
+        if (idx != -1)
         {
-            node->Value = value;
+            _allocated[idx].Value = value;
             return;
         }
         
@@ -56,35 +47,33 @@ public unsafe class ArrayStorage: IStorage
 
     public void Remove(int key)
     {
-        Node* node = FindNode(key);
-        if(node == null) return;
+        int idx = FindNode(key);
+        if(idx == -1) return;
 
-        int offset = (int)(node - _count);
-        
-        _allocated[offset] = _allocated[_count - 1];
+        _allocated[idx] = _allocated[_count - 1];
         --_count;
     }
     
     public void Dispose()
     {
-        OS.Munmap((IntPtr)_allocated, (ulong)_capacity);
+
     }
 
-    private Node* FindNode(int key)
+    private int FindNode(int key)
     {
         for (int i = 0; i < _count; i++)
         {
             if (_allocated[i].Key == key)
             {
-                return &(_allocated[i]);
+                return i;
             }
         }
 
-        return null;
+        return -1;
     }
 
     private int _count;
     private int _capacity;
-    private Node* _allocated;
+    private Node[] _allocated;
     
 }

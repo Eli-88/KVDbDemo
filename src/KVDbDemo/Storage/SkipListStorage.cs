@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace KVDbDemo.Storage;
 
@@ -19,15 +20,7 @@ public unsafe class SkipListStorage : IStorage
     public SkipListStorage(int capacity)
     {
         _capacity = capacity + 1;
-        IntPtr allocated = OS.Mmap(
-            IntPtr.Zero,
-            (ulong)(_capacity * sizeof(Node)),
-            OS.PROT_READ | OS.PROT_WRITE,
-            OS.MAP_PRIVATE | OS.MAP_ANONYMOUS,
-            -1,
-            0);
-        if (allocated == OS.MAP_FAIL) { throw new OutOfMemoryException("mmap failed"); }
-        _allocated = (Node*)allocated;
+        _allocated = (Node*)Marshal.AllocHGlobal(_capacity * sizeof(Node));
 
         
         // allocate a dummy head that never be free
@@ -94,8 +87,8 @@ public unsafe class SkipListStorage : IStorage
         
         Free(node);
     }
-    
-    public void Dispose() => OS.Munmap((IntPtr)_allocated, (ulong)(_capacity * sizeof(Node)));
+
+    public void Dispose() => Marshal.FreeHGlobal((IntPtr)_allocated);
 
 
     #region Helper Function

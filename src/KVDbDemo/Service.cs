@@ -69,7 +69,7 @@ public class Service(string host, ushort port)
         }
     }
     
-    private string? OnDispatch(IStorage storage, string path, string body)
+    internal string? OnDispatch(IStorage storage, string path, string body)
     {
         if (_requestMapping.TryGetValue(path, out var handleRequest))
         {

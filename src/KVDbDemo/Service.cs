@@ -5,18 +5,21 @@ using KVDbDemo.Storage;
 
 namespace KVDbDemo;
 
-public class Service(string host, ushort port, IRequestDispatcher requestDispatcher)
+public class Service(string host, ushort port)
 {
-    private readonly string _prefixUrl                               = $"http://{host}:{port}/";
-    private readonly ConcurrentQueue<HttpListenerContext> _pending   = new();
-
+    private readonly string _prefixUrl                                  = $"http://{host}:{port}/";
+    private readonly ConcurrentQueue<HttpListenerContext> _pending      = new();
+    private readonly Dictionary<string, IHandleRequest> _requestMapping = new();
+    
+    public void MapRequest(string path, IHandleRequest handleRequest) => _requestMapping[path] = handleRequest;
+    
     public void Run(IStorage storage)
     {
         HttpListener listener = new HttpListener();
         listener.Prefixes.Add(_prefixUrl);
         listener.Start();
 
-        new Thread(_ => { ProcessTask(storage); }).Start();
+        new Thread(_ => { OnMessage(storage); }).Start();
 
         while (true)
         {
@@ -25,7 +28,7 @@ public class Service(string host, ushort port, IRequestDispatcher requestDispatc
         }
     }
 
-    private void ProcessTask(IStorage storage)
+    private void OnMessage(IStorage storage)
     {
         while (true)
         {
@@ -43,7 +46,7 @@ public class Service(string host, ushort port, IRequestDispatcher requestDispatc
                 
                 try
                 {
-                    string? dispatchResponse    = requestDispatcher.OnDispatch(storage, request.Url?.AbsolutePath.ToLower() ?? "invalid path", body);
+                    string? dispatchResponse    = OnDispatch(storage, request.Url?.AbsolutePath.ToLower() ?? "invalid path", body);
                     response.StatusCode         = dispatchResponse != null ? 200 : 404;
                     responseString              = dispatchResponse ?? "404 Not Found";
                 }
@@ -64,5 +67,15 @@ public class Service(string host, ushort port, IRequestDispatcher requestDispatc
             response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
             response.OutputStream.Close();
         }
+    }
+    
+    private string? OnDispatch(IStorage storage, string path, string body)
+    {
+        if (_requestMapping.TryGetValue(path, out var handleRequest))
+        {
+            return handleRequest.OnRequest(storage, body);
+        }
+
+        return null;
     }
 }

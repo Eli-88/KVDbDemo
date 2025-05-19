@@ -8,12 +8,11 @@ internal static class Program
     {
         using IStorage storage = new SkipListStorage(1 << 20);
         
-        RequestDispatcher requestDispatcher = new();
-        requestDispatcher.Add("/add", new HandleAddRequest());
-        requestDispatcher.Add("/remove", new HandleRemoveRequest());
-        requestDispatcher.Add("/get", new HandleGetRequest());
-
-        Service service = new Service("localhost", 8080, requestDispatcher);
+        Service service = new Service("localhost", 8080);
+        service.MapRequest("/add", new HandleAddRequest());
+        service.MapRequest("/remove", new HandleRemoveRequest());
+        service.MapRequest("/get", new HandleGetRequest());
+        
         service.Run(storage);
     }
 }

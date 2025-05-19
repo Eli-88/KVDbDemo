@@ -11,35 +11,23 @@ Currently it can only run on mac os due to interop for mmap
 
 ## Class Diagram
 ```mermaid
----
-title: Simplified Class Diagram
----
+
 classDiagram
     IHandleRequest <|-- HandleAddRequest
     IHandleRequest <|-- HandleGetRequest
     IHandleRequest <|-- HandleRemoveRequest
-    IRequestDispatcher <|-- RequestDispatcher
     IStorage <|-- SkipListStorage
     IStorage <|-- ArrayStorage
     IStorage <|-- HashMapStorage
-    Service --> IRequestDispatcher 
+    Service *-- IHandleRequest 
     Service ..> IStorage
-    IRequestDispatcher ..> IStorage
     IHandleRequest ..> IStorage
-    IRequestDispatcher *-- IHandleRequest
 
     class Service {
-        +Service(host: string, port: string, dispatcher: IRequestDispatcher)
+        +Service(host: string, port: string)
         +Run(IStorage)
-        -ProcessTask(IStorage)
-    }
-
-    class IRequestDispatcher {
-        +OnDispatch(storage: IStorage, path: string, body: string) string?
-    }
-
-    class RequestDispatcher {
-        +OnDispatch(storage: IStorage, path: string, body: string) string?
+        -OnMessage(IStorage)
+        -OnDispatch(storage: IStorage, path: string, body: string) string?
     }
 
     class IHandleRequest {

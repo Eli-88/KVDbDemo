@@ -22,10 +22,11 @@ classDiagram
     IStorage <|-- SkipListStorage
     IStorage <|-- ArrayStorage
     IStorage <|-- HashMapStorage
-    Service o-- IRequestDispatcher 
+    Service --> IRequestDispatcher 
     Service ..> IStorage
     IRequestDispatcher ..> IStorage
     IHandleRequest ..> IStorage
+    IRequestDispatcher *-- IHandleRequest
 
     class Service {
         +Service(host: string, port: string, dispatcher: IRequestDispatcher)
